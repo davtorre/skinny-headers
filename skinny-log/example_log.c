@@ -11,14 +11,14 @@ static void busy_work(int n)
 int main(void)
 {
     /* --- mode 1: plain --- */
-    SknLog *plain = slog_init(SKN_LOG_PLAIN, stdout);
+    SknLog *plain = slog_init(SKN_LOG_PLAIN, stdout, NULL, NULL);
     slog_print(plain, SKN_LOG_INFO, "=== plain mode ===\n");
     slog_print(plain, SKN_LOG_INFO, "no timestamp here, just the message\n");
     slog_print(plain, SKN_LOG_INFO, "value: %d, ratio: %.3f\n", 42, 3.14);
     slog_free(plain);
 
     /* --- mode 2: timestamped --- */
-    SknLog *log = slog_init(SKN_LOG_TIMED, stdout);
+    SknLog *log = slog_init(SKN_LOG_TIMED, stdout, NULL, NULL);
     slog_print(log, SKN_LOG_INFO, "=== timed mode ===\n");
     slog_print(log, SKN_LOG_INFO, "every line gets a timestamp\n");
 
@@ -37,7 +37,7 @@ int main(void)
     slog_free(log);
 
     /* --- mode 3: level-tagged --- */
-    SknLog *lvl = slog_init(SKN_LOG_LEVEL, stdout);
+    SknLog *lvl = slog_init(SKN_LOG_LEVEL, stdout, NULL, NULL);
     slog_print(lvl, SKN_LOG_INFO, "=== level mode ===\n");
     slog_print(lvl, SKN_LOG_INFO, "everything is fine\n");
     slog_print(lvl, SKN_LOG_WARN, "disk usage above 80%%\n");
@@ -49,9 +49,16 @@ int main(void)
     slog_free(lvl);
 
     /* --- log to stderr --- */
-    SknLog *err = slog_init(SKN_LOG_LEVEL, stderr);
+    SknLog *err = slog_init(SKN_LOG_LEVEL, stderr, NULL, NULL);
     slog_print(err, SKN_LOG_ERR, "this error goes to stderr\n");
     slog_free(err);
+
+    /* --- custom timestamp delimiters + slog_timestamp() --- */
+    SknLog *report = slog_init(SKN_LOG_LEVEL, stdout, "<", ">");
+    slog_print(report, SKN_LOG_INFO, "=== custom delimiters ===\n");
+    slog_print(report, SKN_LOG_INFO, "prefix now uses <...> instead of [...]\n");
+    printf("report generated at %s\n", slog_timestamp(report));
+    slog_free(report);
 
     return 0;
 }

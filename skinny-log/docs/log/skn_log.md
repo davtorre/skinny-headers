@@ -20,7 +20,7 @@ Header-only logger. Drop `skn_log.h` into your project and include it.
 #define SKN_LOG_IMPLEMENTATION
 #include "skn_log.h"
 
-SknLog *log = slog_init(SKN_LOG_LEVEL, stdout);
+SknLog *log = slog_init(SKN_LOG_LEVEL, stdout, NULL, NULL);
 slog_print(log, SKN_LOG_INFO, "starting\n");
 slog_start_timer(log);
 do_work();
@@ -29,6 +29,14 @@ slog_free(log);
 ```
 
 Define `SKN_LOG_IMPLEMENTATION` in **exactly one** translation unit.
+
+`slog_init`'s last two arguments are the timestamp delimiters (default
+`"["` / `"]"`); pass `NULL` for either to keep the default, or a custom
+pair (e.g. `"<"`, `">"`) to change how every timestamp is wrapped.
+`slog_timestamp(log)` formats the current time with those delimiters into
+a buffer owned by `log` and returns it, for callers who want the
+timestamp string directly rather than only the automatic prefix that
+`slog_print`/`slog_end_timer` add in TIMED/LEVEL modes.
 
 ---
 
@@ -54,6 +62,9 @@ classDiagram
         FILE* stream
         SknLogMode mode
         struct timespec t_start
+        char* ts_open
+        char* ts_close
+        char[64] ts_buf
     }
 
     SknLog --> SknLogMode : mode
@@ -77,6 +88,7 @@ flowchart TD
     slog_print["slog_print()"]:::pub
     slog_start_timer["slog_start_timer()"]:::pub
     slog_end_timer["slog_end_timer()"]:::pub
+    slog_timestamp["slog_timestamp()"]:::pub
     _found_secret["_found_secret()"]:::pub
 
     %% ── Internal helpers ────────────────────────────────────────────
@@ -106,6 +118,9 @@ flowchart TD
     slog_end_timer    --> log__format_elapsed
     slog_end_timer    --> log__print_timestamp
     slog_end_timer    --> log__print_level
+
+    log__print_timestamp --> slog_timestamp
+    slog_timestamp    --> SknLog
 
     log__print_level  --> SknLogLevel
     log__elapsed_ns   --> SknLog
