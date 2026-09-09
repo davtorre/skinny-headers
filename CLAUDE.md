@@ -46,6 +46,16 @@ GitHub: https://github.com/davidetorre92/skinny-headers
 - `SknBar` public API: `sbar_init()`, `sbar_free()`, `sbar_set_chars()`, `sbar_update()`, `sbar_step()`, `sbar_finish()`
 - `SknBarSet` public API: `sbars_init()`, `sbars_free()`, `sbars_set_mode()`, `sbars_config()`, `sbars_set_chars()`, `sbars_start()`, `sbars_update()`, `sbars_step()`, `sbars_start_timer()`, `sbars_log()`, `sbars_end_timer()`, `sbars_finish()`
 
+### skinny-list/ — non-owning tagged linked list ("list viewer") (`skn_list.h`)
+- A lightweight, non-owning linked list of tagged nodes: each node holds a type tag and a `void*` pointing at an external, caller-owned variable (not copied). Build a row of nodes once, mutate the referenced variables in a loop, and reprint without rebuilding the list — for incremental/streaming tabular output.
+- Nodes never own their data: `lstv_free_list` only frees the nodes, never the pointed-to variables.
+- Supported types: `LSTV_INT`, `LSTV_FLOAT`, `LSTV_DOUBLE`, `LSTV_CHAR` (string)
+- Struct: `SknListNode` (type tag + `void*` data + `next`); used as a raw `SknListNode *head` pointer, no separate container struct
+- `lstv_create_node` returns `NULL` on allocation failure; `lstv_push_front` treats a `NULL` node as a safe no-op (returns `-1`, list unchanged)
+- Distinct from `skinny-reader/skn_dat.h`'s `DatList`/`DatListNode`, which hold parsed, owned list *values* inside a `.dat` document — no overlap
+- Public API: `lstv_create_node()`, `lstv_push_front()`, `lstv_free_list()`, `lstv_print_list()`
+- Docs: `docs/list/skn_list.md` (Mermaid class diagram + function dependency flowchart)
+
 ## Docs convention
 - Each library gets a `docs/<name>/skn_<name>.md`
 - Mermaid diagrams: blue = public functions, grey = internal functions, green = data types
